@@ -5,7 +5,7 @@ import Layout from '../components/Layout'
 import Home from '../pages/Home'
 import Study from '../pages/Study'
 import Practice from '../pages/Practice'
-import Test from '../pages/Test'
+import Assessment from '../pages/Assessment'
 import Exam from '../pages/Exam'
 import Analysis from '../pages/Analysis'
 import Position from '../pages/Position'
@@ -30,7 +30,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'test',
-        element: <Test />,
+        element: <Assessment />,
       },
       {
         path: 'exam',

@@ -7,29 +7,222 @@ function Practice() {
   const [selectedAnswer, setSelectedAnswer] = useState('')
   const [showResult, setShowResult] = useState(false)
 
+  const [answeredCount, setAnsweredCount] = useState(0)
+  const [correctCount, setCorrectCount] = useState(0)
+
+  const [wrongQuestions, setWrongQuestions] = useState<number[]>([])
+  const [isFinished, setIsFinished] = useState(false)
+
   const currentQuestion = questions[currentIndex]
 
+  if (!currentQuestion && !isFinished) {
+    return <div>题目加载失败</div>
+  }
+
+  const accuracy =
+    answeredCount === 0
+      ? 0
+      : Math.round((correctCount / answeredCount) * 100)
+
   const handleSubmit = () => {
+
     if (!selectedAnswer) {
       alert('请选择答案')
       return
+    }
+
+    setAnsweredCount(answeredCount + 1)
+
+    if (selectedAnswer === currentQuestion.answer) {
+      setCorrectCount(correctCount + 1)
+    } else {
+      setWrongQuestions([
+        ...wrongQuestions,
+        currentQuestion.id,
+      ])
     }
 
     setShowResult(true)
   }
 
   const handleNext = () => {
+
     if (currentIndex < questions.length - 1) {
+
       setCurrentIndex(currentIndex + 1)
       setSelectedAnswer('')
       setShowResult(false)
+
     } else {
-      alert('已经是最后一题')
+
+      setIsFinished(true)
+
     }
   }
 
+  const handleRestart = () => {
+
+    setCurrentIndex(0)
+    setSelectedAnswer('')
+    setShowResult(false)
+
+    setAnsweredCount(0)
+    setCorrectCount(0)
+
+    setWrongQuestions([])
+    setIsFinished(false)
+  }
+
+  if (isFinished) {
+
+    return (
+
+      <div className="max-w-5xl mx-auto">
+
+        <div className="bg-white rounded-2xl shadow p-10">
+
+          <h1 className="text-4xl font-bold text-center mb-10">
+            🎉 练习完成
+          </h1>
+
+          <div className="grid grid-cols-4 gap-6 mb-10">
+
+            <div className="bg-gray-50 p-6 rounded-xl">
+              <p className="text-gray-500">
+                总题数
+              </p>
+
+              <p className="text-3xl font-bold">
+                {questions.length}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-6 rounded-xl">
+              <p className="text-gray-500">
+                答对题数
+              </p>
+
+              <p className="text-3xl font-bold text-green-600">
+                {correctCount}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-6 rounded-xl">
+              <p className="text-gray-500">
+                正确率
+              </p>
+
+              <p className="text-3xl font-bold text-blue-600">
+                {accuracy}%
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-6 rounded-xl">
+              <p className="text-gray-500">
+                错题数
+              </p>
+
+              <p className="text-3xl font-bold text-red-500">
+                {wrongQuestions.length}
+              </p>
+            </div>
+
+          </div>
+
+          <div className="bg-red-50 p-6 rounded-xl mb-8">
+
+            <h2 className="text-xl font-bold mb-4">
+              错题记录
+            </h2>
+
+            {
+              wrongQuestions.length === 0
+                ? (
+                  <p className="text-green-600 font-bold">
+                    恭喜！全部答对！
+                  </p>
+                )
+                : (
+                  <ul className="space-y-2">
+                    {wrongQuestions.map((id) => (
+                      <li
+                        key={id}
+                        className="text-red-500"
+                      >
+                        第 {id} 题
+                      </li>
+                    ))}
+                  </ul>
+                )
+            }
+
+          </div>
+
+          <div className="text-center">
+
+            <button
+              onClick={handleRestart}
+              className="px-8 py-3 bg-blue-500 text-white rounded-lg"
+            >
+              重新练习
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    )
+  }
+
   return (
+
     <div>
+
+      <div className="grid grid-cols-4 gap-4 mb-8">
+
+        <div className="bg-white p-4 rounded-xl shadow">
+          <p className="text-gray-500">
+            已做题数
+          </p>
+
+          <p className="text-2xl font-bold">
+            {answeredCount}
+          </p>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl shadow">
+          <p className="text-gray-500">
+            答对题数
+          </p>
+
+          <p className="text-2xl font-bold text-green-600">
+            {correctCount}
+          </p>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl shadow">
+          <p className="text-gray-500">
+            正确率
+          </p>
+
+          <p className="text-2xl font-bold text-blue-600">
+            {accuracy}%
+          </p>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl shadow">
+          <p className="text-gray-500">
+            当前进度
+          </p>
+
+          <p className="text-2xl font-bold">
+            {currentIndex + 1}/{questions.length}
+          </p>
+        </div>
+
+      </div>
 
       <h1 className="text-3xl font-bold mb-8">
         题库中心
@@ -75,6 +268,7 @@ function Practice() {
         <div className="mt-8 flex gap-4">
 
           <button
+            disabled={showResult}
             onClick={handleSubmit}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg"
           >
@@ -85,7 +279,11 @@ function Practice() {
             onClick={handleNext}
             className="px-6 py-2 bg-green-500 text-white rounded-lg"
           >
-            下一题
+            {
+              currentIndex === questions.length - 1
+                ? '完成练习'
+                : '下一题'
+            }
           </button>
 
         </div>
@@ -120,6 +318,7 @@ function Practice() {
       </div>
 
     </div>
+
   )
 }
 
