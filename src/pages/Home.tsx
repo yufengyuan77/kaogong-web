@@ -1,6 +1,18 @@
+import { useNavigate } from 'react-router-dom'
 import { Button } from 'antd'
 
+// 功能导航路由映射
+const navItems = [
+  { label: '学', path: '/study', color: 'hover:text-blue-600' },
+  { label: '练', path: '/practice', color: 'hover:text-green-600' },
+  { label: '测', path: '/test', color: 'hover:text-orange-600' },
+  { label: '考', path: '/exam', color: 'hover:text-red-600' },
+  { label: '评', path: '/analysis', color: 'hover:text-purple-600' },
+  { label: '岗', path: '/position', color: 'hover:text-cyan-600' },
+]
+
 function Home() {
+  const navigate = useNavigate()
   return (
     <div className="space-y-8">
 
@@ -31,11 +43,11 @@ function Home() {
         </p>
 
         <div className="flex justify-center gap-4">
-          <Button size="large" type="primary">
+          <Button size="large" type="primary" onClick={() => navigate('/study')}>
             开始学习
           </Button>
 
-          <Button size="large">
+          <Button size="large" onClick={() => navigate('/practice')}>
             开始刷题
           </Button>
         </div>
@@ -95,18 +107,11 @@ function Home() {
 
         <div className="grid grid-cols-6 gap-6">
 
-          {[
-            '学',
-            '练',
-            '测',
-            '考',
-            '评',
-            '岗',
-          ].map((item) => (
-
+          {navItems.map((item) => (
             <div
-              key={item}
-              className="
+              key={item.label}
+              onClick={() => navigate(item.path)}
+              className={`
                 bg-white
                 p-8
                 rounded-2xl
@@ -118,11 +123,11 @@ function Home() {
                 hover:-translate-y-2
                 hover:shadow-xl
                 transition
-              "
+                ${item.color}
+              `}
             >
-              {item}
+              {item.label}
             </div>
-
           ))}
 
         </div>

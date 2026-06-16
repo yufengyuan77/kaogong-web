@@ -1,61 +1,186 @@
-import { useState } from 'react'
-
+import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Tag } from 'antd'
+import {
+  BookOutlined,
+  PlayCircleOutlined,
+  AppstoreOutlined,
+} from '@ant-design/icons'
 import { courses } from '../mock/courses'
 
+const categories = [
+  { key: '行测', icon: '📊', label: '行测' },
+  { key: '申论', icon: '✍️', label: '申论' },
+  { key: '面试', icon: '🎤', label: '面试' },
+]
+
+// 每个分类对应的渐变颜色
+const categoryColors: Record<string, string> = {
+  '行测': 'from-blue-500 to-cyan-500',
+  '申论': 'from-orange-500 to-red-500',
+  '面试': 'from-purple-500 to-pink-500',
+}
+
+const categoryCardBg: Record<string, string> = {
+  '行测': 'from-blue-50 to-cyan-50',
+  '申论': 'from-orange-50 to-red-50',
+  '面试': 'from-purple-50 to-pink-50',
+}
+
+const categoryTagColor: Record<string, string> = {
+  '行测': 'blue',
+  '申论': 'orange',
+  '面试': 'purple',
+}
+
 function Study() {
-
   const [category, setCategory] = useState('行测')
+  const navigate = useNavigate()
 
-console.log(category)
+  const filteredCourses = courses.filter((c) => c.category === category)
 
-const filteredCourses = courses.filter(
-  (course) => course.category === category
-)
+  // 统计数据
+  const stats = useMemo(() => {
+    const totalCourses = courses.length
+    const totalLessons = courses.reduce((sum, c) => sum + c.totalLessons, 0)
+    const categoryCount = categories.length
+    return { totalCourses, totalLessons, categoryCount }
+  }, [])
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8">
-        课程中心
-      </h1>
+      {/* ====== 顶部 Banner ====== */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-8 mb-8 shadow-lg">
+        {/* 装饰圆形 */}
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full" />
+        <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-white/10 rounded-full" />
+        <div className="absolute top-4 right-32 w-6 h-6 bg-white/20 rounded-full" />
 
-      {/* 课程分类 */}
-      <div className="flex gap-4 mb-8">
-        <button
-        onClick={() => setCategory('行测')}
-        className="px-6 py-2 bg-blue-500 text-white rounded-lg">
-          行测
-        </button>
-
-        <button 
-        onClick={() => setCategory('申论')}
-        className="px-6 py-2 bg-white rounded-lg shadow">
-          申论
-        </button>
-
-        <button 
-        onClick={() => setCategory('面试')}
-        className="px-6 py-2 bg-white rounded-lg shadow">
-          面试
-        </button>
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-4xl">📚</span>
+            <h1 className="text-3xl font-bold text-white">课程中心</h1>
+          </div>
+          <p className="text-blue-100 text-lg">
+            系统化学习，从基础到进阶，助你高效备考
+          </p>
+        </div>
       </div>
 
-      {/* 课程列表 */}
-      <div className="grid grid-cols-3 gap-6">
+      {/* ====== 统计概览条 ====== */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="bg-white rounded-xl shadow p-4 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-2xl">
+            <BookOutlined className="text-blue-500" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-800">{stats.totalCourses}</p>
+            <p className="text-sm text-gray-400">精品课程</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow p-4 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-2xl">
+            <PlayCircleOutlined className="text-green-500" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-800">{stats.totalLessons}</p>
+            <p className="text-sm text-gray-400">课程课时</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow p-4 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-2xl">
+            <AppstoreOutlined className="text-purple-500" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-800">{stats.categoryCount}</p>
+            <p className="text-sm text-gray-400">学习分类</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ====== 分类筛选按钮 ====== */}
+      <div className="flex gap-3 mb-8">
+        {categories.map((cat) => {
+          const isActive = category === cat.key
+          return (
+            <button
+              key={cat.key}
+              onClick={() => setCategory(cat.key)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
+                isActive
+                  ? `bg-gradient-to-r ${categoryColors[cat.key]} text-white shadow-lg scale-105`
+                  : 'bg-white text-gray-600 shadow hover:shadow-md hover:bg-gray-50'
+              }`}
+            >
+              <span className="text-lg">{cat.icon}</span>
+              <span>{cat.label}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* ====== 课程卡片网格 ====== */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.map((course) => (
           <div
-            key={course.title}
-            className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition"
+            key={course.id}
+            onClick={() => navigate(`/study/${course.id}`)}
+            className="group bg-white rounded-2xl shadow overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer ring-1 ring-gray-100 hover:ring-blue-200"
           >
-            <div className="text-4xl text-blue-500 mb-4">
+            {/* 卡片顶部渐变封面区 */}
+            <div
+              className={`h-28 bg-gradient-to-br ${categoryCardBg[course.category]} flex items-center justify-center relative overflow-hidden`}
+            >
+              {/* 装饰圆 */}
+              <div className="absolute -bottom-6 -right-6 w-20 h-20 bg-white/60 rounded-full" />
+              <span className="text-5xl relative z-10 drop-shadow-sm">
+                {course.thumbnail}
+              </span>
             </div>
 
-            <h2 className="text-xl font-bold mb-2">
-              {course.title}
-            </h2>
+            {/* 卡片内容 */}
+            <div className="p-5">
+              {/* 分类标签 + 标题 */}
+              <div className="flex items-center gap-2 mb-2">
+                <Tag color={categoryTagColor[course.category]}>
+                  {course.category}
+                </Tag>
+              </div>
+              <h2 className="text-lg font-bold mb-2 group-hover:text-blue-600 transition-colors line-clamp-1">
+                {course.title}
+              </h2>
+              <p className="text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed">
+                {course.description}
+              </p>
 
-            <p className="text-gray-500">
-              共 {course.lessons} 课时
-            </p>
+              {/* 讲师与时长 */}
+              <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
+                <span className="flex items-center gap-1">
+                  <span className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-xs">
+                    👨‍🏫
+                  </span>
+                  {course.instructor}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span>⏱</span>
+                  {course.duration}
+                </span>
+              </div>
+
+              {/* 进度条 */}
+              <div>
+                <div className="flex justify-between text-xs text-gray-400 mb-1.5">
+                  <span>共 {course.totalLessons} 课时</span>
+                  <span className="text-blue-500 font-medium">开始学习 →</span>
+                </div>
+                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full bg-gradient-to-r ${categoryColors[course.category]} rounded-full transition-all duration-500 group-hover:w-full`}
+                    style={{ width: '30%' }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         ))}
       </div>
