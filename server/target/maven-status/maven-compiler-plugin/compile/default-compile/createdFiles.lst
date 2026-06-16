@@ -1,0 +1,14 @@
+com\kaogong\controller\CourseController.class
+com\kaogong\repository\CourseRepository.class
+com\kaogong\entity\Position.class
+com\kaogong\config\CorsConfig.class
+com\kaogong\entity\Lesson.class
+com\kaogong\repository\QuestionRepository.class
+com\kaogong\controller\QuestionController.class
+com\kaogong\controller\PositionController.class
+com\kaogong\controller\StatsController.class
+com\kaogong\repository\LessonRepository.class
+com\kaogong\entity\Question.class
+com\kaogong\repository\PositionRepository.class
+com\kaogong\entity\Course.class
+com\kaogong\KaogongApplication.class
