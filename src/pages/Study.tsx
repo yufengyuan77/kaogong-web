@@ -1,12 +1,24 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Tag } from 'antd'
+import { Tag, Spin } from 'antd'
 import {
   BookOutlined,
   PlayCircleOutlined,
   AppstoreOutlined,
 } from '@ant-design/icons'
-import { courses } from '../mock/courses'
+import { getWithParams } from '../api/client'
+
+// API 返回的课程类型
+interface Course {
+  id: number
+  title: string
+  category: string
+  description: string
+  instructor: string
+  thumbnail: string
+  totalLessons: number
+  duration: string
+}
 
 const categories = [
   { key: '行测', icon: '📊', label: '行测' },
@@ -14,7 +26,6 @@ const categories = [
   { key: '面试', icon: '🎤', label: '面试' },
 ]
 
-// 每个分类对应的渐变颜色
 const categoryColors: Record<string, string> = {
   '行测': 'from-blue-500 to-cyan-500',
   '申论': 'from-orange-500 to-red-500',
@@ -35,39 +46,45 @@ const categoryTagColor: Record<string, string> = {
 
 function Study() {
   const [category, setCategory] = useState('行测')
+  const [courses, setCourses] = useState<Course[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
-  const filteredCourses = courses.filter((c) => c.category === category)
+  // 从后端获取课程数据
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    getWithParams<Course[]>('/courses', { category })
+      .then(setCourses)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [category])
 
-  // 统计数据
+  const filteredCourses = courses
+
   const stats = useMemo(() => {
     const totalCourses = courses.length
     const totalLessons = courses.reduce((sum, c) => sum + c.totalLessons, 0)
-    const categoryCount = categories.length
-    return { totalCourses, totalLessons, categoryCount }
-  }, [])
+    return { totalCourses, totalLessons, categoryCount: categories.length }
+  }, [courses])
 
   return (
     <div>
-      {/* ====== 顶部 Banner ====== */}
+      {/* Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-8 mb-8 shadow-lg">
-        {/* 装饰圆形 */}
         <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full" />
         <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-white/10 rounded-full" />
-        <div className="absolute top-4 right-32 w-6 h-6 bg-white/20 rounded-full" />
-
         <div className="relative">
           <div className="flex items-center gap-3 mb-3">
             <span className="text-4xl">📚</span>
             <h1 className="text-3xl font-bold text-white">课程中心</h1>
           </div>
-          <p className="text-blue-100 text-lg">
-            系统化学习，从基础到进阶，助你高效备考
-          </p>
+          <p className="text-blue-100 text-lg">系统化学习，从基础到进阶，助你高效备考</p>
         </div>
       </div>
 
-      {/* ====== 统计概览条 ====== */}
+      {/* 统计概览条 */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-xl shadow p-4 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-2xl">
@@ -98,7 +115,7 @@ function Study() {
         </div>
       </div>
 
-      {/* ====== 分类筛选按钮 ====== */}
+      {/* 分类筛选按钮 */}
       <div className="flex gap-3 mb-8">
         {categories.map((cat) => {
           const isActive = category === cat.key
@@ -119,71 +136,59 @@ function Study() {
         })}
       </div>
 
-      {/* ====== 课程卡片网格 ====== */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCourses.map((course) => (
-          <div
-            key={course.id}
-            onClick={() => navigate(`/study/${course.id}`)}
-            className="group bg-white rounded-2xl shadow overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer ring-1 ring-gray-100 hover:ring-blue-200"
-          >
-            {/* 卡片顶部渐变封面区 */}
+      {/* 课程列表 */}
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <Spin size="large" />
+        </div>
+      ) : error ? (
+        <div className="text-center py-20 text-red-400">
+          <p className="text-4xl mb-3">⚠️</p>
+          <p>加载失败：{error}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCourses.map((course) => (
             <div
-              className={`h-28 bg-gradient-to-br ${categoryCardBg[course.category]} flex items-center justify-center relative overflow-hidden`}
+              key={course.id}
+              onClick={() => navigate(`/study/${course.id}`)}
+              className="group bg-white rounded-2xl shadow overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer ring-1 ring-gray-100 hover:ring-blue-200"
             >
-              {/* 装饰圆 */}
-              <div className="absolute -bottom-6 -right-6 w-20 h-20 bg-white/60 rounded-full" />
-              <span className="text-5xl relative z-10 drop-shadow-sm">
-                {course.thumbnail}
-              </span>
-            </div>
-
-            {/* 卡片内容 */}
-            <div className="p-5">
-              {/* 分类标签 + 标题 */}
-              <div className="flex items-center gap-2 mb-2">
-                <Tag color={categoryTagColor[course.category]}>
-                  {course.category}
-                </Tag>
+              <div
+                className={`h-28 bg-gradient-to-br ${categoryCardBg[course.category]} flex items-center justify-center relative overflow-hidden`}
+              >
+                <div className="absolute -bottom-6 -right-6 w-20 h-20 bg-white/60 rounded-full" />
+                <span className="text-5xl relative z-10 drop-shadow-sm">{course.thumbnail}</span>
               </div>
-              <h2 className="text-lg font-bold mb-2 group-hover:text-blue-600 transition-colors line-clamp-1">
-                {course.title}
-              </h2>
-              <p className="text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed">
-                {course.description}
-              </p>
-
-              {/* 讲师与时长 */}
-              <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
-                <span className="flex items-center gap-1">
-                  <span className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-xs">
-                    👨‍🏫
-                  </span>
-                  {course.instructor}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span>⏱</span>
-                  {course.duration}
-                </span>
-              </div>
-
-              {/* 进度条 */}
-              <div>
-                <div className="flex justify-between text-xs text-gray-400 mb-1.5">
-                  <span>共 {course.totalLessons} 课时</span>
-                  <span className="text-blue-500 font-medium">开始学习 →</span>
+              <div className="p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Tag color={categoryTagColor[course.category]}>{course.category}</Tag>
                 </div>
-                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full bg-gradient-to-r ${categoryColors[course.category]} rounded-full transition-all duration-500 group-hover:w-full`}
-                    style={{ width: '30%' }}
-                  />
+                <h2 className="text-lg font-bold mb-2 group-hover:text-blue-600 transition-colors line-clamp-1">
+                  {course.title}
+                </h2>
+                <p className="text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed">{course.description}</p>
+                <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
+                  <span>👨‍🏫 {course.instructor}</span>
+                  <span>⏱ {course.duration}</span>
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs text-gray-400 mb-1.5">
+                    <span>共 {course.totalLessons} 课时</span>
+                    <span className="text-blue-500 font-medium">开始学习 →</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full bg-gradient-to-r ${categoryColors[course.category]} rounded-full`}
+                      style={{ width: '30%' }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
